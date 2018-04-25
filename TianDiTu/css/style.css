@@ -9,19 +9,16 @@ html, body {
     height: 100%;
     width: 100%;
 }
-#selectBasemap {
-    position: absolute;
+.select-div select {
+	position: absolute;
     top: 16px;
-    right: 20px;
     padding: 8px;
     border-radius: 5px;
     background-color: #fff;
 }
+#selectBasemap {
+    left: 20px;
+}
 #selectCood {
-    position: absolute;
-    top: 16px;
-    right: 100px;
-    padding: 8px;
-    border-radius: 5px;
-    background-color: #fff;
+    left: 100px;
 }
