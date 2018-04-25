@@ -8,7 +8,7 @@ var baseAnnoName = "cva"; //注记
 var typeMatrixSet = "c";  //"c"-地理坐标系，"w"-投影坐标系
 ```
 
-##添加图层
+## 添加图层
 添加底图不需要参数，注记图层只需传入"ano"参数即可：
 ```javascript
 var baseLayer = new TianDiTuLayer();
@@ -29,6 +29,6 @@ map.addLayer(annolayer);
 * ter: 地形底图
 * cta: 地形注记图层
 
-##预览
+## 预览
 ![](https://github.com/huangli005/TianDiTu/raw/master/images/1.png) 
 ![](https://github.com/huangli005/TianDiTu/raw/master/images/2.png) 
