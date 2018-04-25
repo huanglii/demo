@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>ArcGIS API for JavaScript 加载天地图WMTS图层</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/3.18/esri/css/esri.css">
+</head>
+
+<body>
+<div id="map"></div>
+<div>
+    <select id="selectBasemap">
+        <option value="vec">矢量</option>
+        <option value="img">影像</option>
+        <option value="ter">地形</option>
+    </select>
+
+    <select id="selectCood">
+        <option value="c">地理坐标系</option>
+        <option value="w">投影坐标系</option>
+    </select>
+</div>
+
+<script>
+    var selfUrl = document.location.href.substring(0, document.location.href.lastIndexOf("/"));
+    var dojoConfig = {
+        modulePaths: {"TDT": selfUrl + "/js/TDT"}
+    };
+</script>
+<script src="https://js.arcgis.com/3.18/"></script>
+<script src="js/jquery-1.11.3.min.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
