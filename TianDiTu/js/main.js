@@ -16,7 +16,8 @@ require([
             "xmax": 138,
             "ymax": 50,
             "spatialReference": {"wkid": 4326}
-        })
+        }),
+		slider: false
     });
 
     // 初始化底图和注记图层
