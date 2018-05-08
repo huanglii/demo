@@ -39,7 +39,7 @@
                     zoom: 5
                 });
                 map.on("load", function () {
-                    addGeoJsonLayer("data/dc-bike-share.json");
+                    addGeoJsonLayer("data/dc-school-zones.json");
                 });
                 function addGeoJsonLayer(url) {
                     // 创建图层
@@ -53,8 +53,10 @@
                     // 添加到地图
                     map.addLayer(geoJsonLayer);
                 }
-            });
-        </script>
+            }
+		);
+    </script>
+	<script type="text/javascript" src="https://giser.xyz/demo/giser.js"></script>
     </head>
 <body>
     <div id="mapDiv"></div>
