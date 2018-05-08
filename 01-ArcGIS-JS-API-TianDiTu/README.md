@@ -1,7 +1,7 @@
 # ArcGIS API for JavaScript 加载天地图WMTS图层
 
 ## 预览
-[ArcGIS API for JavaScript 加载天地图WMTS图层](http://giser.xyz/demo/TianDiTu/index.html)
+[ArcGIS API for JavaScript 加载天地图WMTS图层](https://giser.xyz/demo/01-ArcGIS-JS-API-TianDiTu/index.html)
 
 ## 变量
 ```javascript
@@ -31,7 +31,3 @@ map.addLayer(annolayer);
 *
 * ter: 地形底图
 * cta: 地形注记图层
-
-## 预览
-![](https://github.com/huangli005/TianDiTu/raw/master/images/1.png) 
-![](https://github.com/huangli005/TianDiTu/raw/master/images/2.png) 
