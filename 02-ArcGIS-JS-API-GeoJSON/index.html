@@ -18,8 +18,10 @@
             margin: 0;
         }
     </style>
-	<script type="text/javascript" src="https://giser.xyz/demo/giser.js"></script>
-    <!-- ArcGIS API for JavaScript -->
+    </head>
+<body>
+    <div id="mapDiv"></div>
+	<!-- ArcGIS API for JavaScript -->
     <script src="https://js.arcgis.com/3.20"></script>
     <!-- Terraformer -->
     <script src="https://unpkg.com/terraformer@1.0.7"></script>
@@ -35,7 +37,10 @@
             "dojo/domReady!"],
             function (Map, GeoJsonLayer, SimpleRenderer, on, query, dom) {
                 // 创建地图
-                var map = new Map("mapDiv");
+                var map = new Map("mapDiv", {
+                    basemap: "gray",
+                    zoom: 5
+                });
                 map.on("load", function () {
                     addGeoJsonLayer("data/dc-school-zones.json");
                 });
@@ -54,8 +59,6 @@
             }
 		);
     </script>
-    </head>
-<body>
-    <div id="mapDiv"></div>
+	<script type="text/javascript" src="https://giser.xyz/demo/giser.js"></script>
 </body>
 </html>
