@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>ArcGIS API for JavaScript 加载GeoJSON数据</title>
+	<link rel="icon" type="image/png" sizes="32x32" href="https://giser.xyz/images/favicon-32x32-next.png">
+    <!-- ArcGIS API for JavaScript CSS-->
+    <link rel="stylesheet" href="https://js.arcgis.com/3.20/esri/css/esri.css">
+    <style>
+        html,
+        body,
+        #mapDiv {
+            height: 100%;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+    <!-- ArcGIS API for JavaScript -->
+    <script src="https://js.arcgis.com/3.20"></script>
+    <!-- Terraformer -->
+    <script src="https://unpkg.com/terraformer@1.0.7"></script>
+    <script src="https://unpkg.com/terraformer-arcgis-parser@1.0.5"></script>
+    <script>
+        require([
+            "esri/map",
+            "js/geojsonlayer.js",
+            "esri/renderers/SimpleRenderer",
+            "dojo/on",
+            "dojo/query",
+            "dojo/dom",
+            "dojo/domReady!"],
+            function (Map, GeoJsonLayer, SimpleRenderer, on, query, dom) {
+                // 创建地图
+                var map = new Map("mapDiv", {
+                    basemap: "gray",
+                    zoom: 5
+                });
+                map.on("load", function () {
+                    addGeoJsonLayer("data/dc-bike-share.json");
+                });
+                function addGeoJsonLayer(url) {
+                    // 创建图层
+                    var geoJsonLayer = new GeoJsonLayer({
+                        url: url
+                    });
+                    // 缩放至图层
+                    geoJsonLayer.on("update-end", function (e) {
+                        map.setExtent(e.target.extent.expand(1.2));
+                    });
+                    // 添加到地图
+                    map.addLayer(geoJsonLayer);
+                }
+            });
+        </script>
+    </head>
+<body>
+    <div id="mapDiv"></div>
+</body>
+</html>
