@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>OpenLayers-地图操作</title>
+  <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css">
+  <style>
+    * {
+      margin: 0;
+    }
+    html, body, #map {
+      height: 100%;
+    }
+    .menu-group {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      z-index: 2000;
+    }
+  </style>
+</head>
+<body>
+  <div id="map">
+      <div class="menu-group">
+        <button id="zoom-out">单击缩小</button>
+        <button id="zoom-in">单击放大</button>
+        <button id="rotate-30">旋转30度</button>
+        <button id="panto">平移到【重庆】</button>
+        <button id="restore">复位</button>
+      </div>
+    </div>
+  <script type="text/javascript" src="https://openlayers.org/en/v4.6.5/build/ol.js"></script>
+  <script type="text/javascript">
+    var map = new ol.Map({
+      target: 'map', // 地图容器ID
+      // 图层
+      layers: [
+        new ol.layer.Tile({
+          preload: 4, // 预加载
+          source: new ol.source.OSM()
+        })
+      ],
+      // 视图
+      view: new ol.View({
+        center: ol.proj.fromLonLat([114.049072, 22.543001]), // 初始中心点
+        zoom: 12,   // 初始缩放级别
+        maxZoom: 18 // 最大缩放级别
+      }),
+      loadTilesWhileAnimating: true  // 加载瓦片时开启动画效果
+    });
+
+    // 地图视图初始参数
+    var view = map.getView();
+    var zoom = view.getZoom();
+    var center = view.getCenter();
+    var rotation = view.getRotation();
+
+    function onClick(id, callback) {
+      document.getElementById(id).addEventListener('click', callback);
+    }
+
+    // 缩小
+    onClick('zoom-out', function () {
+      var view = map.getView();   // 获取地图视图
+      var zoom = view.getZoom();  // 获得当前缩放级数
+      view.setZoom(zoom - 1);     // 地图缩小一级
+    });
+    // 放大
+    onClick('zoom-in', function () {
+      var view = map.getView();   // 获取地图视图
+      var zoom = view.getZoom();  // 获得当前缩放级数
+      view.setZoom(zoom + 1);     // 地图放大一级
+    });
+    onClick('rotate-30', function () {
+      var view = map.getView();   // 获取地图视图
+      var rotation = view.getRotation();  // 获取当前旋转角度
+      view.setRotation(rotation + Math.PI / 6); // 选择30度
+    });
+    // 平移
+    onClick('panto', function () {
+      var view = map.getView();   // 获取地图视图
+      var cq = ol.proj.fromLonLat([106.545410, 29.554345]);
+      view.setCenter(cq);         // 平移地图
+    });
+    // 复位
+    onClick('restore', function () {
+      view.setCenter(center);     // 初始中心点
+      view.setRotation(rotation); // 初始旋转角度
+      view.setZoom(zoom);         // 初始缩放级数
+    });
+  </script>
+</body>
+</html>

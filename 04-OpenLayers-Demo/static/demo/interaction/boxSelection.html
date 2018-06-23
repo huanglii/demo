@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>OpenLayers-框选</title>
+  <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css">
+  <style>
+    * {
+      margin: 0;
+    }
+    html, body, #map {
+      height: 100%;
+    }
+    #info {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      z-index: 2000;
+    }
+    .ol-dragbox {
+      background-color: rgba(255,255,255,0.4);
+      border-color: rgba(100,150,0,1);
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="info">No countries selected</div>
+  <script type="text/javascript" src="https://openlayers.org/en/v4.6.5/build/ol.js"></script>
+  <script type="text/javascript">
+    var vectorSource = new ol.source.Vector({
+      url: '/static/data/countries.geojson',
+      format: new ol.format.GeoJSON()
+    });
+    var map = new ol.Map({
+      target: 'map', // 地图容器ID
+      // 图层
+      layers: [
+        new ol.layer.Tile({
+          preload: 4, // 预加载
+          source: new ol.source.OSM()
+        }), new ol.layer.Vector({
+          source: vectorSource
+        })
+      ],
+      // 视图
+      view: new ol.View({
+        center: ol.proj.fromLonLat([108.049072, 31.543001]), // 初始中心点
+        zoom: 4,    // 初始缩放级别
+        maxZoom: 18 // 最大缩放级别
+      })
+    });
+    // a normal select interaction to handle click
+    var select = new ol.interaction.Select();
+    map.addInteraction(select);
+
+    var selectedFeatures = select.getFeatures();
+
+    // a DragBox interaction used to select features by drawing boxes
+    var dragBox = new ol.interaction.DragBox({
+      condition: ol.events.condition.platformModifierKeyOnly
+    });
+
+    map.addInteraction(dragBox);
+
+    dragBox.on('boxend', function() {
+      // features that intersect the box are added to the collection of
+      // selected features
+      var extent = dragBox.getGeometry().getExtent();
+      vectorSource.forEachFeatureIntersectingExtent(extent, function(feature) {
+        selectedFeatures.push(feature);
+      });
+    });
+
+    // clear selection when drawing a new box and when clicking on the map
+    dragBox.on('boxstart', function() {
+      selectedFeatures.clear();
+    });
+
+    var infoBox = document.getElementById('info');
+
+    selectedFeatures.on(['add', 'remove'], function() {
+      var names = selectedFeatures.getArray().map(function(feature) {
+        return feature.get('name');
+      });
+      if (names.length > 0) {
+        infoBox.innerHTML = names.join(', ');
+      } else {
+        infoBox.innerHTML = 'No countries selected';
+      }
+    });
+  </script>
+</body>
+</html>

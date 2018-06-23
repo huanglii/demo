@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>OpenLayers-视图动画</title>
+  <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css">
+  <style>
+    * {
+      margin: 0;
+    }
+    html, body, #map {
+      height: 100%;
+    }
+    .menu-group {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      z-index: 2000;
+    }
+  </style>
+</head>
+<body>
+  <div id="map">
+    <div class="menu-group">
+      <button id="rotate-left">↻</button>
+      <button id="rotate-right">↺</button>
+      <button id="rotate-around-sz">绕深圳旋转</button>
+      <button id="pan-to-bj">平移到北京</button>
+      <button id="elastic-to-sh">弹性定位到上海</button>
+      <button id="bounce-to-gz">弹跳定位到广州</button>
+      <button id="spin-to-sz">自旋定位到深圳</button>
+      <button id="fly-to-cq">飞行定位到重庆</button>
+      <button id="tour">旅行路线</button>
+    </div>
+  </div>
+  <script type="text/javascript" src="https://openlayers.org/en/v4.6.5/build/ol.js"></script>
+  <script type="text/javascript">
+    // 视图
+    var view = new ol.View({
+      center: ol.proj.fromLonLat([114.049072, 22.543001]), // 初始中心点
+      zoom: 10,   // 初始缩放级别
+      maxZoom: 18 // 最大缩放级别
+    });
+    // 地图对象
+    var map = new ol.Map({
+      target: 'map', // 地图容器ID
+      // 图层
+      layers: [
+        new ol.layer.Tile({
+          preload: 4, // 预加载
+          source: new ol.source.OSM()
+        })
+      ],
+      view: view, // 视图
+      loadTilesWhileAnimating: true  // 在制作动画时加载瓦片
+    });
+    // 各定位点
+    var chongqing = ol.proj.fromLonLat([106.545410, 29.554345]);
+    var beijing = ol.proj.fromLonLat([116.389160, 39.918163]);
+    var shanghai = ol.proj.fromLonLat([121.486816, 31.222197]);
+    var guangzhou = ol.proj.fromLonLat([113.258057, 23.130257]);
+    var shenzhen = ol.proj.fromLonLat([114.049072, 22.543001]);
+    
+    function onClick(id, callback) {
+      document.getElementById(id).addEventListener('click', callback);
+    }
+    // 左旋转
+    onClick('rotate-left', function() {
+      view.animate({
+        rotation: view.getRotation() + Math.PI / 6
+      });
+    });
+    // 右旋转
+    onClick('rotate-right', function() {
+      view.animate({
+        rotation: view.getRotation() - Math.PI / 6
+      });
+    });
+    // 绕深圳旋转
+    onClick('rotate-around-sz', function() {
+      // Rotation animation takes the shortest arc, so animate in two parts
+      var rotation = view.getRotation();
+      view.animate({
+        rotation: rotation + Math.PI,
+        anchor: shenzhen,
+        easing: ol.easing.easeIn
+      }, {
+        rotation: rotation + 2 * Math.PI,
+        anchor: shenzhen,
+        easing: ol.easing.easeOut
+      });
+    });
+    // 平移到北京
+    onClick('pan-to-bj', function() {
+      view.animate({
+        center: beijing,
+        duration: 2000
+      });
+    });
+    // 弹性定位到上海
+    // An elastic easing method (from https://github.com/DmitryBaranovskiy/raphael).
+    function elastic(t) {
+      return Math.pow(2, -10 * t) * Math.sin((t - 0.075) * (2 * Math.PI) / 0.3) + 1;
+    }
+    onClick('elastic-to-sh', function() {
+      view.animate({
+        center: shanghai,
+        duration: 2000,
+        easing: elastic
+      });
+    });
+    // 弹性定位到广州
+    // A bounce easing method (from https://github.com/DmitryBaranovskiy/raphael).
+    function bounce(t) {
+      var s = 7.5625, p = 2.75, l;
+      if (t < (1 / p)) {
+        l = s * t * t;
+      } else {
+        if (t < (2 / p)) {
+          t -= (1.5 / p);
+          l = s * t * t + 0.75;
+        } else {
+          if (t < (2.5 / p)) {
+            t -= (2.25 / p);
+            l = s * t * t + 0.9375;
+          } else {
+            t -= (2.625 / p);
+            l = s * t * t + 0.984375;
+          }
+        }
+      }
+      return l;
+    }
+    onClick('bounce-to-gz', function() {
+      view.animate({
+        center: guangzhou,
+        duration: 2000,
+        easing: bounce
+      });
+    });
+    // 自旋定位到深圳
+    onClick('spin-to-sz', function() {
+      // Rotation animation takes the shortest arc, so animate in two parts
+      var center = view.getCenter();
+      view.animate({
+        center: [
+          center[0] + (shenzhen[0] - center[0]) / 2,
+          center[1] + (shenzhen[1] - center[1]) / 2
+        ],
+        rotation: Math.PI,
+        easing: ol.easing.easeIn
+      }, {
+        center: shenzhen,
+        rotation: 2 * Math.PI,
+        easing: ol.easing.easeOut
+      });
+    });
+    // 飞行...
+    function flyTo(location, done) {
+      var duration = 2000;
+      var zoom = view.getZoom();
+      var parts = 2;
+      var called = false;
+      function callback(complete) {
+        --parts;
+        if (called) {
+          return;
+        }
+        if (parts === 0 || !complete) {
+          called = true;
+          done(complete);
+        }
+      }
+      view.animate({
+        center: location,
+        duration: duration
+      }, callback);
+      view.animate({
+        zoom: zoom - 1,
+        duration: duration / 2
+      }, {
+        zoom: zoom,
+        duration: duration / 2
+      }, callback);
+    }
+    // 飞行定位到重庆
+    onClick('fly-to-cq', function() {
+      flyTo(chongqing, function() {});
+    });
+    function tour() {
+      var locations = [beijing, shanghai, guangzhou, shenzhen];
+      var index = -1;
+      function next(more) {
+        if (more) {
+          ++index;
+          if (index < locations.length) {
+            var delay = index === 0 ? 0 : 750;
+            setTimeout(function() {
+              flyTo(locations[index], next);
+            }, delay);
+          } else {
+            alert('旅行结束！');
+          }
+        } else {
+          alert('旅行被取消');
+        }
+      }
+      next(true);
+    }
+    onClick('tour', tour);
+  </script>
+</body>
+</html>
