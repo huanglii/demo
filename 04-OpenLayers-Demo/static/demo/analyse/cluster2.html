@@ -198,7 +198,7 @@
         source: new ol.source.Cluster({
           distance: 40,
           source: new ol.source.Vector({
-            url: 'https://openlayers.org/en/v4.6.5/examples/data/kml/2012_Earthquakes_Mag5.kml',
+            url: '../data/ol-demo/2012_Earthquakes_Mag5.kml',
             format: new ol.format.KML({
               extractStyles: false
             })
@@ -207,12 +207,11 @@
         style: styleFunction
       });
 
-      const countriesSource = new ol.source.Vector({
-        url: 'http://openlayers.org/en/latest/examples/data/geojson/countries.geojson',
-        format: new ol.format.GeoJSON()
-      });
       const countriesLyr = new ol.layer.Vector({
-        source: countriesSource
+        source: new ol.source.Vector({
+          url: '../data/ol-demo/countries.geojson',
+          format: new ol.format.GeoJSON()
+        })
       })
 
       const raster = new ol.layer.Tile({
