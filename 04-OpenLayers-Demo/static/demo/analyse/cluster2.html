@@ -65,14 +65,14 @@
       /**
        * 弹窗元素
        */
-      const container = document.getElementById('popup');
-      const content = document.getElementById('popup-content');
-      const closer = document.getElementById('popup-closer');
+      var container = document.getElementById('popup');
+      var content = document.getElementById('popup-content');
+      var closer = document.getElementById('popup-closer');
 
       /**
        * 创建一个Overlay
        */
-      const overlay = new ol.Overlay({
+      var overlay = new ol.Overlay({
         element: container,
         autoPan: true,
         autoPanAnimation: {
@@ -90,21 +90,21 @@
         return false;
       };
 
-      const earthquakeFill = new ol.style.Fill({
+      var earthquakeFill = new ol.style.Fill({
         color: 'rgba(255, 153, 0, 0.8)'
       });
-      const earthquakeStroke = new ol.style.Stroke({
+      var earthquakeStroke = new ol.style.Stroke({
         color: 'rgba(255, 204, 0, 0.2)',
         width: 1
       });
-      const textFill = new ol.style.Fill({
+      var textFill = new ol.style.Fill({
         color: '#fff'
       });
-      const textStroke = new ol.style.Stroke({
+      var textStroke = new ol.style.Stroke({
         color: 'rgba(0, 0, 0, 0.6)',
         width: 3
       });
-      const invisibleFill = new ol.style.Fill({
+      var invisibleFill = new ol.style.Fill({
         color: 'rgba(255, 255, 255, 0.01)'
       });
 
@@ -129,7 +129,7 @@
         });
       }
 
-      let maxFeatureCount;
+      var maxFeatureCount;
       function calculateClusterInfo(resolution) {
         maxFeatureCount = 0;
         var features = earthquakeLyr.getSource().getFeatures();
@@ -149,7 +149,7 @@
         }
       }
 
-      let currentResolution;
+      var currentResolution;
       function styleFunction(feature, resolution) {
         if (resolution != currentResolution) {
           calculateClusterInfo(resolution);
@@ -194,7 +194,7 @@
         return styles;
       }
 
-      const earthquakeLyr = new ol.layer.Vector({
+      var earthquakeLyr = new ol.layer.Vector({
         source: new ol.source.Cluster({
           distance: 40,
           source: new ol.source.Vector({
@@ -207,20 +207,20 @@
         style: styleFunction
       });
 
-      const countriesLyr = new ol.layer.Vector({
+      var countriesLyr = new ol.layer.Vector({
         source: new ol.source.Vector({
           url: '../data/ol-demo/countries.geojson',
           format: new ol.format.GeoJSON()
         })
       })
 
-      const raster = new ol.layer.Tile({
+      var raster = new ol.layer.Tile({
         source: new ol.source.Stamen({
           layer: 'toner'
         })
       });
 
-      const map = new ol.Map({
+      var map = new ol.Map({
         layers: [raster, earthquakeLyr, countriesLyr],
         // 鼠标放入，展示聚合所有点
         // interactions: ol.interaction.defaults().extend([new ol.interaction.Select({
@@ -238,7 +238,7 @@
         })
       });
       map.on('singleclick', function(evt) {
-        const fs = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+        var fs = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
           return feature.get('features');
         }, {
           layerFilter: function(layer) {
@@ -246,10 +246,10 @@
           }
         });
         if(!!fs) {
-          const coordinate = evt.coordinate;
-          const hdms = ol.coordinate.toStringHDMS(ol.proj.transform(coordinate, 'EPSG:3857', 'EPSG:4326'));
-          let contentTxt = 0;
-          let i, ii;
+          var coordinate = evt.coordinate;
+          var hdms = ol.coordinate.toStringHDMS(ol.proj.transform(coordinate, 'EPSG:3857', 'EPSG:4326'));
+          var contentTxt = 0;
+          var i, ii;
           for (i = 0, ii = fs.length; i < ii; ++i) {
             contentTxt ++;
           }
