@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OpenLayers-Earthquake Clusters</title>
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css" type="text/css">
+    <script src="https://openlayers.org/en/v4.6.5/build/ol.js"></script>
+    <style>
+      * {
+        margin: 0;
+      }
+      html, body, #map {
+        height: 100%;
+      }
+      .ol-popup {
+        position: absolute;
+        background-color: white;
+        -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+        filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #cccccc;
+        bottom: 12px;
+        left: -50px;
+        min-width: 65px;
+      }
+      .ol-popup:after, .ol-popup:before {
+        top: 100%;
+        border: solid transparent;
+        content: " ";
+        height: 0;
+        width: 0;
+        position: absolute;
+        pointer-events: none;
+      }
+      .ol-popup:after {
+        border-top-color: white;
+        border-width: 10px;
+        left: 48px;
+        margin-left: -10px;
+      }
+      .ol-popup:before {
+        border-top-color: #cccccc;
+        border-width: 11px;
+        left: 48px;
+        margin-left: -11px;
+      }
+      .ol-popup-closer {
+        text-decoration: none;
+        position: absolute;
+        top: 2px;
+        right: 8px;
+      }
+      .ol-popup-closer:after {
+        content: "✖";
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="popup" class="ol-popup">
+      <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+      <div id="popup-content"></div>
+    </div>
+    <script>
+      /**
+       * 弹窗元素
+       */
+      const container = document.getElementById('popup');
+      const content = document.getElementById('popup-content');
+      const closer = document.getElementById('popup-closer');
+
+      /**
+       * 创建一个Overlay
+       */
+      const overlay = new ol.Overlay({
+        element: container,
+        autoPan: true,
+        autoPanAnimation: {
+          duration: 250
+        }
+      });
+
+      /**
+       * 点击关闭弹窗
+       * @return {boolean} href无效
+       */
+      closer.onclick = function() {
+        overlay.setPosition(undefined);
+        closer.blur();
+        return false;
+      };
+
+      const earthquakeFill = new ol.style.Fill({
+        color: 'rgba(255, 153, 0, 0.8)'
+      });
+      const earthquakeStroke = new ol.style.Stroke({
+        color: 'rgba(255, 204, 0, 0.2)',
+        width: 1
+      });
+      const textFill = new ol.style.Fill({
+        color: '#fff'
+      });
+      const textStroke = new ol.style.Stroke({
+        color: 'rgba(0, 0, 0, 0.6)',
+        width: 3
+      });
+      const invisibleFill = new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0.01)'
+      });
+
+      /**
+       * 地震点样式
+       */
+      function createEarthquakeStyle(feature) {
+        var name = feature.get('name');
+        var magnitude = parseFloat(name.substr(2));
+        var radius = 5 + 20 * (magnitude - 5);
+
+        return new ol.style.Style({
+          geometry: feature.getGeometry(),
+          image: new ol.style.RegularShape({
+            radius1: radius,
+            radius2: 3,
+            points: 4,
+            angle: Math.PI,
+            fill: earthquakeFill,
+            stroke: earthquakeStroke
+          })
+        });
+      }
+
+      let maxFeatureCount;
+      function calculateClusterInfo(resolution) {
+        maxFeatureCount = 0;
+        var features = earthquakeLyr.getSource().getFeatures();
+        var feature, radius;
+        for (var i = features.length - 1; i >= 0; --i) {
+          feature = features[i];
+          var originalFeatures = feature.get('features');
+          var extent = ol.extent.createEmpty();
+          var j, jj;
+          for (j = 0, jj = originalFeatures.length; j < jj; ++j) {
+            ol.extent.extend(extent, originalFeatures[j].getGeometry().getExtent());
+          }
+          maxFeatureCount = Math.max(maxFeatureCount, jj);
+          radius = 0.25 * (ol.extent.getWidth(extent) + ol.extent.getHeight(extent)) /
+              resolution;
+          feature.set('radius', radius);
+        }
+      }
+
+      let currentResolution;
+      function styleFunction(feature, resolution) {
+        if (resolution != currentResolution) {
+          calculateClusterInfo(resolution);
+          currentResolution = resolution;
+        }
+        var style;
+        var size = feature.get('features').length;
+        if (size > 1) {
+          style = new ol.style.Style({
+            image: new ol.style.Circle({
+              radius: feature.get('radius'),
+              fill: new ol.style.Fill({
+                color: [255, 153, 0, Math.min(0.8, 0.4 + (size / maxFeatureCount))]
+              })
+            }),
+            text: new ol.style.Text({
+              text: size.toString(),
+              fill: textFill,
+              stroke: textStroke
+            })
+          });
+        } else {
+          var originalFeature = feature.get('features')[0];
+          style = createEarthquakeStyle(originalFeature);
+        }
+        return style;
+      }
+
+      function selectStyleFunction(feature) {
+        var styles = [new ol.style.Style({
+          image: new ol.style.Circle({
+            radius: feature.get('radius'),
+            fill: invisibleFill
+          })
+        })];
+        var originalFeatures = feature.get('features');
+        var originalFeature;
+        for (var i = originalFeatures.length - 1; i >= 0; --i) {
+          originalFeature = originalFeatures[i];
+          styles.push(createEarthquakeStyle(originalFeature));
+        }
+        return styles;
+      }
+
+      const earthquakeLyr = new ol.layer.Vector({
+        source: new ol.source.Cluster({
+          distance: 40,
+          source: new ol.source.Vector({
+            url: 'https://openlayers.org/en/v4.6.5/examples/data/kml/2012_Earthquakes_Mag5.kml',
+            format: new ol.format.KML({
+              extractStyles: false
+            })
+          })
+        }),
+        style: styleFunction
+      });
+
+      const countriesSource = new ol.source.Vector({
+        url: 'http://openlayers.org/en/latest/examples/data/geojson/countries.geojson',
+        format: new ol.format.GeoJSON()
+      });
+      const countriesLyr = new ol.layer.Vector({
+        source: countriesSource
+      })
+
+      const raster = new ol.layer.Tile({
+        source: new ol.source.Stamen({
+          layer: 'toner'
+        })
+      });
+
+      const map = new ol.Map({
+        layers: [raster, earthquakeLyr, countriesLyr],
+        // 鼠标放入，展示聚合所有点
+        // interactions: ol.interaction.defaults().extend([new ol.interaction.Select({
+        //   condition: function(evt) {
+        //     return  evt.type == 'pointermove' ||
+        //         evt.type == 'singleclick';
+        //   },
+        //   style: selectStyleFunction
+        // })]),
+        overlays: [overlay],
+        target: 'map',
+        view: new ol.View({
+          center: [0, 0],
+          zoom: 2
+        })
+      });
+      map.on('singleclick', function(evt) {
+        const fs = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+          return feature.get('features');
+        }, {
+          layerFilter: function(layer) {
+            return layer === earthquakeLyr
+          }
+        });
+        if(!!fs) {
+          const coordinate = evt.coordinate;
+          const hdms = ol.coordinate.toStringHDMS(ol.proj.transform(coordinate, 'EPSG:3857', 'EPSG:4326'));
+          let contentTxt = 0;
+          let i, ii;
+          for (i = 0, ii = fs.length; i < ii; ++i) {
+            contentTxt ++;
+          }
+          content.innerHTML = contentTxt;
+          overlay.setPosition(coordinate);
+        }
+      });
+    </script>
+  </body>
+</html>

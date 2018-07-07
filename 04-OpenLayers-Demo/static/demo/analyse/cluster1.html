@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Earthquake Clusters</title>
+    <title>OpenLayers-Earthquake Clusters</title>
     <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css" type="text/css">
     <script src="https://openlayers.org/en/v4.6.5/build/ol.js"></script>
     <style>
@@ -11,163 +11,85 @@
       html, body, #map {
         height: 100%;
       }
-      #info {
-        position: absolute;
-        height: 1px;
-        width: 1px;
-        z-index: 100;
-      }
-      .tooltip.in {
-        opacity: 1;
-      }
-      .tooltip.top .tooltip-arrow {
-        border-top-color: white;
-      }
-      .tooltip-inner {
-        border: 2px solid white;
+      form {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        z-index: 2000;
       }
     </style>
   </head>
   <body>
     <div id="map"></div>
+    <form>
+      <label>聚合距离</label>
+      <input id="distance" type="range" min="0" max="100" step="1" value="40"/>
+    </form>
     <script>
-      var earthquakeFill = new ol.style.Fill({
-        color: 'rgba(255, 153, 0, 0.8)'
-      });
-      var earthquakeStroke = new ol.style.Stroke({
-        color: 'rgba(255, 204, 0, 0.2)',
-        width: 1
-      });
-      var textFill = new ol.style.Fill({
-        color: '#fff'
-      });
-      var textStroke = new ol.style.Stroke({
-        color: 'rgba(0, 0, 0, 0.6)',
-        width: 3
-      });
-      var invisibleFill = new ol.style.Fill({
-        color: 'rgba(255, 255, 255, 0.01)'
-      });
-
-      function createEarthquakeStyle(feature) {
-        // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
-        // standards-violating <magnitude> tag in each Placemark.  We extract it
-        // from the Placemark's name instead.
-        var name = feature.get('name');
-        var magnitude = parseFloat(name.substr(2));
-        var radius = 5 + 20 * (magnitude - 5);
-
-        return new ol.style.Style({
-          geometry: feature.getGeometry(),
-          image: new ol.style.RegularShape({
-            radius1: radius,
-            radius2: 3,
-            points: 4,
-            angle: Math.PI,
-            fill: earthquakeFill,
-            stroke: earthquakeStroke
-          })
-        });
+      var distance = document.getElementById('distance');
+      // 生成随机点
+      var count = 20000;
+      var features = new Array(count);
+      var e = 4500000;
+      for (var i = 0; i < count; ++i) {
+        var coordinates = [2 * e * Math.random() - e, 2 * e * Math.random() - e];
+        features[i] = new ol.Feature(new ol.geom.Point(coordinates));
       }
 
-      var maxFeatureCount, vector;
-      function calculateClusterInfo(resolution) {
-        maxFeatureCount = 0;
-        var features = vector.getSource().getFeatures();
-        var feature, radius;
-        for (var i = features.length - 1; i >= 0; --i) {
-          feature = features[i];
-          var originalFeatures = feature.get('features');
-          var extent = ol.extent.createEmpty();
-          var j, jj;
-          for (j = 0, jj = originalFeatures.length; j < jj; ++j) {
-            ol.extent.extend(extent, originalFeatures[j].getGeometry().getExtent());
-          }
-          maxFeatureCount = Math.max(maxFeatureCount, jj);
-          radius = 0.25 * (ol.extent.getWidth(extent) + ol.extent.getHeight(extent)) /
-              resolution;
-          feature.set('radius', radius);
-        }
-      }
+      var source = new ol.source.Vector({
+        features: features
+      });
 
-      var currentResolution;
-      function styleFunction(feature, resolution) {
-        if (resolution != currentResolution) {
-          calculateClusterInfo(resolution);
-          currentResolution = resolution;
-        }
-        var style;
-        var size = feature.get('features').length;
-        if (size > 1) {
-          style = new ol.style.Style({
-            image: new ol.style.Circle({
-              radius: feature.get('radius'),
-              fill: new ol.style.Fill({
-                color: [255, 153, 0, Math.min(0.8, 0.4 + (size / maxFeatureCount))]
+      var clusterSource = new ol.source.Cluster({
+        distance: parseInt(distance.value, 10),
+        source: source
+      });
+
+      var styleCache = {};
+      var clusters = new ol.layer.Vector({
+        source: clusterSource,
+        style: function(feature) {
+          var size = feature.get('features').length;
+          var style = styleCache[size];
+          if (!style) {
+            style = new ol.style.Style({
+              image: new ol.style.Circle({
+                radius: 10,
+                stroke: new ol.style.Stroke({
+                  color: '#fff'
+                }),
+                fill: new ol.style.Fill({
+                  color: '#3399CC'
+                })
+              }),
+              text: new ol.style.Text({
+                text: size.toString(),
+                fill: new ol.style.Fill({
+                  color: '#fff'
+                })
               })
-            }),
-            text: new ol.style.Text({
-              text: size.toString(),
-              fill: textFill,
-              stroke: textStroke
-            })
-          });
-        } else {
-          var originalFeature = feature.get('features')[0];
-          style = createEarthquakeStyle(originalFeature);
+            });
+            styleCache[size] = style;
+          }
+          return style;
         }
-        return style;
-      }
-
-      function selectStyleFunction(feature) {
-        var styles = [new ol.style.Style({
-          image: new ol.style.Circle({
-            radius: feature.get('radius'),
-            fill: invisibleFill
-          })
-        })];
-        var originalFeatures = feature.get('features');
-        var originalFeature;
-        for (var i = originalFeatures.length - 1; i >= 0; --i) {
-          originalFeature = originalFeatures[i];
-          styles.push(createEarthquakeStyle(originalFeature));
-        }
-        return styles;
-      }
-
-      vector = new ol.layer.Vector({
-        source: new ol.source.Cluster({
-          distance: 40,
-          source: new ol.source.Vector({
-            url: 'https://openlayers.org/en/v4.6.5/examples/data/kml/2012_Earthquakes_Mag5.kml',
-            format: new ol.format.KML({
-              extractStyles: false
-            })
-          })
-        }),
-        style: styleFunction
       });
 
       var raster = new ol.layer.Tile({
-        source: new ol.source.Stamen({
-          layer: 'toner'
-        })
+        source: new ol.source.OSM()
       });
 
       var map = new ol.Map({
-        layers: [raster, vector],
-        interactions: ol.interaction.defaults().extend([new ol.interaction.Select({
-          condition: function(evt) {
-            return  evt.type == 'pointermove' ||
-                evt.type == 'singleclick';
-          },
-          style: selectStyleFunction
-        })]),
+        layers: [raster, clusters],
         target: 'map',
         view: new ol.View({
           center: [0, 0],
           zoom: 2
         })
+      });
+
+      distance.addEventListener('input', function() {
+        clusterSource.setDistance(parseInt(distance.value, 10));
       });
     </script>
   </body>
