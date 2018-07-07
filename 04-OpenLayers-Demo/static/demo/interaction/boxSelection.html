@@ -33,21 +33,17 @@
       format: new ol.format.GeoJSON()
     });
     var map = new ol.Map({
-      target: 'map', // 地图容器ID
-      // 图层
+      target: 'map',
       layers: [
         new ol.layer.Tile({
-          preload: 4, // 预加载
           source: new ol.source.OSM()
         }), new ol.layer.Vector({
           source: vectorSource
         })
       ],
-      // 视图
       view: new ol.View({
-        center: ol.proj.fromLonLat([108.049072, 31.543001]), // 初始中心点
-        zoom: 4,    // 初始缩放级别
-        maxZoom: 18 // 最大缩放级别
+        center: ol.proj.fromLonLat([108.049072, 31.543001]),
+        zoom: 4
       })
     });
     // a normal select interaction to handle click

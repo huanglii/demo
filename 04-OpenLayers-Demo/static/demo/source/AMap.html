@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>OpenLayers-高德地图</title>
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css" type="text/css">
+    <style>
+      * {
+        margin: 0;
+      }
+      html, body, #map {
+        height: 100%;
+      }
+      #layer-select {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        z-index: 2000;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <select id="layer-select">
+      <option value="vec" selected>矢量</option>
+      <option value="sat">影像</option>
+    </select>
+
+    <script src="https://openlayers.org/en/v4.6.5/build/ol.js"></script>
+    <script>
+      var amapUrl = {
+        vec: 'http://webrd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}',
+        sat: 'http://webst0{1-4}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}'
+      }
+      var source = new ol.source.XYZ({
+        url: amapUrl.vec
+      });
+      var map = new ol.Map({
+        layers: [new ol.layer.Tile({
+          preload: 4,
+          source: source
+        })],
+        loadTilesWhileInteracting: true,
+        target: 'map',
+        view: new ol.View({
+          center: ol.proj.fromLonLat([114.049072, 22.543001]),
+          zoom: 10
+        })
+      });
+
+      var select = document.getElementById('layer-select');
+      function onChange() {
+        var mapType = select.value;
+        source.setUrl(amapUrl[mapType]);
+      }
+      select.addEventListener('change', onChange);
+      onChange();
+    </script>
+  </body>
+</html>
