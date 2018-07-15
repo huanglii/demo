@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>OpenLayers-测量</title>
+  <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css" type="text/css">
+  <style>
+    * {
+      margin: 0;
+    }
+
+    html, body, #map {
+      height: 100%;
+    }
+
+    .form-inline {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      z-index: 2000;
+    }
+
+    .tooltip {
+      position: relative;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      color: white;
+      padding: 4px 8px;
+      opacity: 0.7;
+      white-space: nowrap;
+    }
+
+    .tooltip-measure {
+      opacity: 1;
+      font-weight: bold;
+    }
+
+    .tooltip-static {
+      background-color: #ffcc33;
+      color: black;
+      border: 1px solid white;
+    }
+
+    .tooltip-measure:before, .tooltip-static:before {
+      border-top: 6px solid rgba(0, 0, 0, 0.5);
+      border-right: 6px solid transparent;
+      border-left: 6px solid transparent;
+      content: "";
+      position: absolute;
+      bottom: -6px;
+      margin-left: -7px;
+      left: 50%;
+    }
+
+    .tooltip-static:before {
+      border-top-color: #ffcc33;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <form class="form-inline">
+    <select id="type">
+      <option value="length">长度(LineString)</option>
+      <option value="area">面积(Polygon)</option>
+    </select>
+  </form>
+  <script src="https://openlayers.org/en/v4.6.5/build/ol.js"></script>
+  <script>
+    var raster = new ol.layer.Tile({
+      source: new ol.source.XYZ({
+        url: 'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetGray/MapServer/tile/{z}/{y}/{x}'
+      })
+    });
+    var source = new ol.source.Vector();
+    var vector = new ol.layer.Vector({
+      source: source,
+      style: new ol.style.Style({
+        fill: new ol.style.Fill({
+          color: 'rgba(255, 255, 255, 0.2)'
+        }),
+        stroke: new ol.style.Stroke({
+          color: '#ffcc33',
+          width: 2
+        }),
+        image: new ol.style.Circle({
+          radius: 7,
+          fill: new ol.style.Fill({
+            color: '#ffcc33'
+          })
+        })
+      })
+    });
+
+    // 当前绘制的feature. @type {ol.Feature}
+    var sketch;
+    // 绘制的点集合
+    var sketchPoints = [];
+
+    // 提示框. @type {Element}
+    var helpTooltipElement;
+    // 帮助提示Overlay. @type {ol.Overlay}
+    var helpTooltip;
+
+    // 测量提示框. @type {Element}
+    var measureTooltipElement;
+    // 测量提示Overlay. @type {ol.Overlay}
+    var measureTooltip;
+
+    // 每段线的距离提示. @type {Element}
+    var eachMeasureTooltipElement;
+    // 每段线的距离提示Overlay. @type {ol.Overlay}
+    var eachMeasureTootip;
+
+    // 提示信息
+    var continuePolygonMsg = '单击继续绘制多边形';
+    var continueLineMsg = '单击继续绘制线';
+
+    /**
+     * 鼠标移动.
+     * @param {ol.MapBrowserEvent} evt The event.
+     */
+    var pointerMoveHandler = function (evt) {
+      if (evt.dragging) {
+        return;
+      }
+      /** @type {string} */
+      var helpMsg = '单击开始绘制';
+
+      if (sketch) {
+        var geom = (sketch.getGeometry());
+        if (geom instanceof ol.geom.Polygon) {
+          helpMsg = continuePolygonMsg;
+        } else if (geom instanceof ol.geom.LineString) {
+          helpMsg = continueLineMsg;
+        }
+      }
+      helpTooltipElement.innerHTML = helpMsg;
+      helpTooltip.setPosition(evt.coordinate);
+      helpTooltipElement.classList.remove('hidden');
+    };
+
+    /**
+     * 鼠标单击, 记录每条线段的距离.
+     * @param {ol.MapBrowserEvent} evt The event.
+     */
+    var singleClickHander = function (evt) {
+      if (evt.dragging) {
+        return;
+      }
+      if (sketch) {
+        sketchPoints.push(evt.coordinate);
+        if (sketchPoints.length > 1) {
+          var geom = (sketch.getGeometry());
+          let coor2 = evt.coordinate;
+            let coor1 = sketchPoints[sketchPoints.length - 2];
+            createEachMeasureTooltipByCoordinates(coor1, coor2);
+          
+        }
+      }
+    };
+
+    var map = new ol.Map({
+      target: 'map', // 地图容器ID
+      layers: [raster, vector],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([114.049072, 22.543001]), // 初始中心点
+        zoom: 12,     // 初始缩放级别
+        maxZoom: 18,  // 最大缩放级别
+        minZoom: 2,   // 最小缩放级别
+      })
+    });
+
+    map.on('pointermove', pointerMoveHandler);
+    map.on('singleclick', singleClickHander);
+
+    map.getViewport().addEventListener('mouseout', function () {
+      helpTooltipElement.classList.add('hidden');
+    });
+
+    var typeSelect = document.getElementById('type');
+
+    var draw; // global so we can remove it later
+
+    // 两点计算坐标
+    function lineLength(coordinates1, coordinates2) {
+      let length = 0;
+      const x1 = coordinates1[0];
+      const y1 = coordinates1[1];
+      const x2 = coordinates2[0];
+      const y2 = coordinates2[1];
+      length = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+      return length;
+    }
+
+    /**
+     * 格式化长度输出
+     * @param {number} 长度.
+     * @return {string} 格式化长度.
+     */
+    var formatLength = function (length) {
+      let output;
+      if (length > 100) {
+        output = (Math.round(length / 1000 * 100) / 100) +
+          ' ' + 'km';
+      } else {
+        output = (Math.round(length * 100) / 100) +
+          ' ' + 'm';
+      }
+      return output;
+    };
+
+    /**
+     * 格式化面积输出.
+     * @param {ol.geom.Polygon} 多边形.
+     * @return {string} 格式化面积.
+     */
+    var formatArea = function (area) {
+      var output;
+      if (area > 10000) {
+        output = (Math.round(area / 1000000 * 100) / 100) +
+          ' ' + 'km<sup>2</sup>';
+      } else {
+        output = (Math.round(area * 100) / 100) +
+          ' ' + 'm<sup>2</sup>';
+      }
+      return output;
+    };
+
+    function addInteraction() {
+      var type = (typeSelect.value == 'area' ? 'Polygon' : 'LineString');
+      draw = new ol.interaction.Draw({
+        source: source,
+        type: type,
+        style: new ol.style.Style({
+          fill: new ol.style.Fill({
+            color: 'rgba(255, 255, 255, 0.2)'
+          }),
+          stroke: new ol.style.Stroke({
+            color: 'rgba(0, 0, 0, 0.5)',
+            lineDash: [10, 10],
+            width: 2
+          }),
+          image: new ol.style.Circle({
+            radius: 5,
+            stroke: new ol.style.Stroke({
+              color: 'rgba(0, 0, 0, 0.7)'
+            }),
+            fill: new ol.style.Fill({
+              color: 'rgba(255, 255, 255, 0.2)'
+            })
+          })
+        })
+      });
+      map.addInteraction(draw);
+
+      createMeasureTooltip();
+      createEachMeasureTooltip();
+      createHelpTooltip();
+
+      var listener;
+      draw.on('drawstart',
+        function (evt) {
+          // 设置sketch
+          sketch = evt.feature;
+
+          /** @type {ol.Coordinate|undefined} */
+          var tooltipCoord = evt.coordinate;
+
+          listener = sketch.getGeometry().on('change', function (evt) {
+            var geom = evt.target;
+            var output;
+            if (geom instanceof ol.geom.Polygon) {
+              output = formatArea(ol.Sphere.getArea(geom));
+              tooltipCoord = geom.getInteriorPoint().getCoordinates();
+            } else if (geom instanceof ol.geom.LineString) {
+              // 两种方式计算的结果有误差？？？
+              // output = formatLength(ol.Sphere.getLength(geom));
+              output = formatLength(geom.getLength());
+              tooltipCoord = geom.getLastCoordinate();
+            }
+            measureTooltipElement.innerHTML = output;
+            measureTooltip.setPosition(tooltipCoord);
+          });
+        }, this);
+
+      draw.on('drawend', function (evt) {
+        let geom = evt.feature.getGeometry()
+        let coordinates = geom.getCoordinates();
+        if (geom instanceof ol.geom.LineString) {
+          let length = coordinates.length;
+          if(length > 2) {
+            createEachMeasureTooltipByCoordinates(coordinates[length - 1], coordinates[length - 2]);
+          }
+        } else if (geom instanceof ol.geom.Polygon) {
+          let length = coordinates[0].length;
+          createEachMeasureTooltipByCoordinates(coordinates[0][length - 1], coordinates[0][length - 2]);
+          createEachMeasureTooltipByCoordinates(coordinates[0][length - 3], coordinates[0][length - 2]);
+        }
+
+        sketchPoints = [];
+        // unset sketch
+        sketch = null;
+        // unset tooltip so that a new one can be created
+        measureTooltipElement = null;
+        createMeasureTooltip();
+        ol.Observable.unByKey(listener);
+      }, this);
+    }
+
+    /**
+     * Creates a new help tooltip
+     */
+    function createHelpTooltip() {
+      if (helpTooltipElement) {
+        helpTooltipElement.parentNode.removeChild(helpTooltipElement);
+      }
+      helpTooltipElement = document.createElement('div');
+      helpTooltipElement.className = 'tooltip hidden';
+      helpTooltip = new ol.Overlay({
+        element: helpTooltipElement,
+        offset: [15, 0],
+        positioning: 'center-left'
+      });
+      map.addOverlay(helpTooltip);
+    }
+
+    // 创建测量提示
+    function createMeasureTooltip() {
+      if (measureTooltipElement) {
+        measureTooltipElement.parentNode.removeChild(measureTooltipElement);
+      }
+      measureTooltipElement = document.createElement('div');
+      measureTooltipElement.className = 'tooltip tooltip-measure';
+      measureTooltip = new ol.Overlay({
+        element: measureTooltipElement,
+        offset: [0, -7],
+        positioning: 'bottom-center'
+      });
+      map.addOverlay(measureTooltip);
+    }
+
+    // 创建每段线的测量提示
+    function createEachMeasureTooltip() {
+      eachMeasureTooltipElement = document.createElement('div');
+      eachMeasureTooltipElement.className = 'tooltip tooltip-static';
+      eachMeasureTooltip = new ol.Overlay({
+        element: eachMeasureTooltipElement,
+        offset: [0, -7],
+        positioning: 'bottom-center'
+      });
+      map.addOverlay(eachMeasureTooltip);
+    }
+
+    // 创建每段线的测量提示
+    function createEachMeasureTooltipByCoordinates(coor1, coor2) {
+      let output = formatLength(lineLength(coor1, coor2));
+      //计算中间点
+      let centerX = (coor2[0] - coor1[0]) / 2 + coor1[0];
+      let centerY = (coor2[1] - coor1[1]) / 2 + coor1[1];
+      eachMeasureTooltipElement.innerHTML = output;
+      eachMeasureTooltip.setPosition([centerX, centerY]);
+      createEachMeasureTooltip();
+    }
+
+    // 集合类型切换
+    typeSelect.onchange = function () {
+      sketchPoints = [];
+      map.removeInteraction(draw);
+      addInteraction();
+    };
+
+    addInteraction();
+  </script>
+</body>
+
+</html>

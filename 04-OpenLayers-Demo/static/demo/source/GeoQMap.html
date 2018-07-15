@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>OpenLayers-智图地图</title>
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css" type="text/css">
+    <style>
+      * {
+        margin: 0;
+      }
+      html, body, #map {
+        height: 100%;
+      }
+      #layer-select {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        z-index: 2000;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <select id="layer-select">
+      <option value="community" selected>彩色版</option>
+      <option value="streetWarm">暖色版</option>
+      <option value="streetPurplishBlue">蓝黑版</option>
+      <option value="streetGray">灰色版</option>
+    </select>
+
+    <script src="https://openlayers.org/en/v4.6.5/build/ol.js"></script>
+    <script>
+      var geoqUrl = {
+        community: 'https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineCommunity/MapServer/tile/{z}/{y}/{x}',
+        streetWarm: 'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetWarm/MapServer/tile/{z}/{y}/{x}',
+        streetPurplishBlue: 'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}',
+        streetGray: 'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetGray/MapServer/tile/{z}/{y}/{x}'
+      }
+      var source = new ol.source.XYZ({
+        url: geoqUrl.community
+      });
+      var map = new ol.Map({
+        layers: [new ol.layer.Tile({
+          preload: 4,
+          source: source
+        })],
+        loadTilesWhileInteracting: true,
+        target: 'map',
+        view: new ol.View({
+          center: ol.proj.fromLonLat([114.049072, 22.543001]),
+          zoom: 10
+        })
+      });
+
+      var select = document.getElementById('layer-select');
+      function onChange() {
+        var mapType = select.value;
+        source.setUrl(geoqUrl[mapType]);
+      }
+      select.addEventListener('change', onChange);
+      onChange();
+    </script>
+  </body>
+</html>
