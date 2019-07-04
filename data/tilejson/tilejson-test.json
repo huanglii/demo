@@ -21,6 +21,17 @@
     "id": "zhyq_xzqh_py",
     "type": "Polygon",
     "description": ""
+  }, {
+    "minzoom": 0,
+    "fields": {
+      "mc": "String",
+      "mapguid": "String",
+      "id": "Number"
+    },
+    "maxzoom": 17,
+    "id": "zhyq_xzqh_py",
+    "type": "LineString",
+    "description": ""
   }],
   "zoom": 9,
   "maxzoom": 17,
