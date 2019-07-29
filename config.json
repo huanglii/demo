@@ -1,5 +1,11 @@
 {
   "demoList": [{
+    "id": 7,
+    "title": "Mapbox GL JS Cookbook",
+    "url": "https://giser.xyz/mapbox-gl-js-cookbook/",
+    "imageUrl": "https://giser.xyz/demo/images/7.jpg",
+    "time": "2019-07-29"
+  }, {
     "id": 6,
     "title": "Mapbox 城市选择器",
     "url": "https://giser.xyz/demo/06-CitySelectorControl/index.html",
