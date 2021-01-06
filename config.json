@@ -2,44 +2,44 @@
   "demoList": [{
     "id": 7,
     "title": "Mapbox GL JS Cookbook",
-    "url": "https://giser.xyz/mapbox-gl-js-cookbook/",
-    "imageUrl": "https://giser.xyz/demo/images/7.jpg",
+    "url": "https://huanglii.github.io/mapbox-gl-js-cookbook/",
+    "imageUrl": "https://huanglii.github.io/demo/images/7.jpg",
     "time": "2019-07-29"
   }, {
     "id": 6,
     "title": "Mapbox 城市选择器",
-    "url": "https://giser.xyz/demo/06-CitySelectorControl/index.html",
-    "imageUrl": "https://giser.xyz/demo/images/6.jpg",
+    "url": "https://huanglii.github.io/demo/06-CitySelectorControl/index.html",
+    "imageUrl": "https://huanglii.github.io/demo/images/6.jpg",
     "time": "2019-04-13"
   }, {
     "id": 5,
     "title": "一张图看懂“火星坐标系”",
-    "url": "https://giser.xyz/demo/05-MarsCoordinate/index.html",
-    "imageUrl": "https://giser.xyz/demo/images/5.jpg",
+    "url": "https://huanglii.github.io/demo/05-MarsCoordinate/index.html",
+    "imageUrl": "https://huanglii.github.io/demo/images/5.jpg",
     "time": "2018-08-19"
   }, {
     "id": 4,
     "title": "OpenLayers 示例",
-    "url": "https://giser.xyz/demo/04-OpenLayers-Demo/index.html",
-    "imageUrl": "https://giser.xyz/demo/images/4.jpg",
+    "url": "https://huanglii.github.io/demo/04-OpenLayers-Demo/index.html",
+    "imageUrl": "https://huanglii.github.io/demo/images/4.jpg",
     "time": "2018-06-23"
   }, {
     "id": 3,
     "title": "高德地图API获取行政区域",
-    "url": "https://giser.xyz/demo/03-Dist-AMap/index.html",
-    "imageUrl": "https://giser.xyz/demo/images/3.jpg",
+    "url": "https://huanglii.github.io/demo/03-Dist-AMap/index.html",
+    "imageUrl": "https://huanglii.github.io/demo/images/3.jpg",
     "time": "2018-04-28"
   }, {
     "id": 2,
     "title": "ArcGIS API for JavaScript 加载GeoJSON数据",
-    "url": "https://giser.xyz/demo/02-ArcGIS-JS-API-GeoJSON/index.html",
-    "imageUrl": "https://giser.xyz/demo/images/2.jpg",
+    "url": "https://huanglii.github.io/demo/02-ArcGIS-JS-API-GeoJSON/index.html",
+    "imageUrl": "https://huanglii.github.io/demo/images/2.jpg",
     "time": "2017-10-28"
   }, {
     "id": 1,
     "title": "ArcGIS API for JavaScript 加载天地图WMTS图层",
-    "url": "http://giser.xyz/demo/01-ArcGIS-JS-API-TianDiTu/index.html",
-    "imageUrl": "https://giser.xyz/demo/images/1.jpg",
+    "url": "http://huanglii.github.io/demo/01-ArcGIS-JS-API-TianDiTu/index.html",
+    "imageUrl": "https://huanglii.github.io/demo/images/1.jpg",
     "time": "2017-10-28"
   }]
 }

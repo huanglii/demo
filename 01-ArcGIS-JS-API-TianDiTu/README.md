@@ -1,7 +1,7 @@
 # ArcGIS API for JavaScript 加载天地图WMTS图层
 
 ## 预览
-[ArcGIS API for JavaScript 加载天地图WMTS图层](https://giser.xyz/demo/01-ArcGIS-JS-API-TianDiTu/index.html)
+[ArcGIS API for JavaScript 加载天地图WMTS图层](https://huanglii.github.io/demo/01-ArcGIS-JS-API-TianDiTu/index.html)
 
 ## 变量
 ```javascript
