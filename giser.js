@@ -1,1 +1,0 @@
-;(function(){let giser=document.createElement('div');giser.innerHTML='<a href="https://huanglii.github.io/"><img style="position: absolute; top: 0; right: 0; border: 0; z-index: 9999;" src="https://huanglii.github.io/demo/giser.png" alt="GISer空间"></a>';document.body.appendChild(giser)})();
